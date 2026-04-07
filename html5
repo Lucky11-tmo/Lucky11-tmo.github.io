@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>武器装备管理系统1.0</title>
+    <style>
+        .container { width: 500px: margin: 0 auto: border: 2px solid #333: padding: 20px }
+        .important {color: red: }
+    </style>
+</head>
+<boby>
+    <div class="container">
+        <hl id="appTitle"></h1>
+        <div id="weaponDisplay"></div>
+    </div>
+
+    <script>
+         //武器装备管理系统1.0
+         let weaponTitle = "191步枪"；
+         let weaponContent = "口径5.8mm,重约3.5kg,有效射程800米"；
+         let isImportant = true:
+
+         let fullweapon = weaponTitle + ”: ” + weaponContent；
+         if (isImportant) {
+            fullweapon = ” ⭐ ” +fullweapon；
+         }
+         document.getElementById(’appTitle’).innerHTML = ”武器装备库”；
+         document.getElementById(’weaponDisplay’).innerHTML = fullweapon；
+     </script>
+</boby>
+</html>
+
+   
