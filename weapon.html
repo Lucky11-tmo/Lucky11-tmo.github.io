@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>武器对象管理网页</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "微软雅黑", sans-serif;
+    }
+    body {
+      padding: 30px;
+    }
+    .container {
+      width: 900px;
+      margin: 0 auto;
+      border: 2px solid #000;
+      padding: 40px 30px;
+       }
+    h1.title {
+      text-align: center;
+      font-size: 38px;
+      margin-bottom: 35px;
+      font-weight: bold;
+    }
+    .weapon-item {
+      border: 1px solid #888;
+      padding: 24px 20px;
+      margin-bottom: 22px;
+    }
+    .weapon-name {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 14px;
+    }
+    .important {
+      color: #ff0000;
+    }
+    .weapon-desc {
+      font-size: 18px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    button {
+      padding: 7px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      border: 1px solid #666;
+       background: #fff;
+    }
+    .btn-add-box {
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">武器对象</h1>
+    <div id="weaponList"></div>
+    <div class="btn-add-box">
+      <button id="addBtn">添加武器</button>
+    </div>
+  </div>
+
+  <script>
+    let weaponList = JSON.parse(localStorage.getItem('weaponData')) || [
+      {
+        id: 1,
+        name: '191步枪',
+        desc: '口径5.8mm，重约3.5kg，有效射程800米',
+        isImportant: true
+      },
+      {
+        id: 2,
+        name: '东风17',
+        desc: '射程2500公里，10马赫滑翔突防。',
+        isImportant: false
+          }
+    ];
+
+    function saveData() {
+      localStorage.setItem('weaponData', JSON.stringify(weaponList));
+    }
+
+    function renderList() {
+      const listBox = document.getElementById('weaponList');
+      listBox.innerHTML = '';
+      weaponList.forEach(item => {
+        const dom = document.createElement('div');
+        dom.className = 'weapon-item';
+        dom.innerHTML = `
+          <div class="weapon-name ${item.isImportant ? 'important' : ''}">${item.name}</div>
+          <p class="weapon-desc">${item.desc}</p >
+          <button onclick="toggleImportant(${item.id})">切换重要</button>
+        `;
+        listBox.appendChild(dom);
+      })
+    }
+
+    window.toggleImportant = function(targetId) {
+      const target = weaponList.find(ele => ele.id === targetId);
+      target.isImportant = !target.isImportant;
+      saveData();
+      renderList();
+    }
+    
+    document.getElementById('addBtn').addEventListener('click', function(){
+      let newName = prompt('请输入武器名称：');
+      if(!newName) return;
+      let newDesc = prompt('请输入武器参数描述：');
+      if(!newDesc) return;
+
+      const newId = weaponList.length > 0 ? Math.max(...weaponList.map(i=>i.id)) + 1 : 1;
+      weaponList.push({
+        id: newId,
+        name: newName,
+        desc: newDesc,
+        isImportant: false
+      })
+      saveData();
+      renderList();
+    })
+
+    renderList();
+  </script>
+</html>
