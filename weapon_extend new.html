@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>武器对象管理系统</title>
+    <!-- 第9、10章 jQuery库引入 -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", sans-serif;
+        }
+        body {
+            padding: 30px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 38px;
+            margin-bottom: 35px;
+            font-weight: bold;
+        }
+        .weapon-item {
+            width: 90%;
+            margin: 15px auto;
+            border: 1px solid #333;
+            padding: 20px;
+        }
+        .weapon-item h2 {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        .important {
+            color: red;
+        }
+        .weapon-item p {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        button {
+            font-size: 16px;
+            padding: 6px 14px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        #addNew {
+            display: block;
+            margin: 30px auto 0;
+            padding: 8px 22px;
+        }
+    </style>
+</head>
+<body>
+    <h1>武器对象</h1>
+    <div id="container"></div>
+    <button id="addNew">添加武器</button>
+
+<script>
+// ========== 第11章 JS面向对象进阶：武器类、封装、继承思想 ==========
+class Weapon {
+    constructor(name, info, isImportant = false) {
+        this.name = name;
+        this.info = info;
+        this.isImportant = isImportant;
+    }
+    // 类方法：切换重要状态
+    toggleImportant() {
+        this.isImportant = !this.isImportant;
+    }
+    // 生成武器卡片HTML结构
+    getCardHTML(index) {
+        return `
+            <div class="weapon-item" data-index="${index}">
+                <h2 class="${this.isImportant ? 'important' : ''}">${this.name}</h2>
+                <p>${this.info}</p>
+                <button class="toggle-btn">切换重要</button>
+                <button class="copy-btn">复制装备</button>
+                <button class="del-btn">删除装备</button>
+            </div>
+        `
+    }
+}
+
+// 装备管理总类
+class WeaponManager {
+    constructor() {
+        // ========== 第8章 BOM：localStorage本地持久化存储 ==========
+        let saveData = localStorage.getItem("weaponList");
+        if (saveData) {
+            // 读取本地存储并转为Weapon实例对象
+            this.weaponList = JSON.parse(saveData).map(item => new Weapon(item.name, item.info, item.isImportant));
+        } else {
+            // 初始默认数据（和你截图一致：191步枪、东风17）
+            this.weaponList = [
+                new Weapon("191步枪", "口径5.8mm，重约3.5kg，有效射程800米", true),
+                new Weapon("东风17", "射程2500公里，10马赫滑翔突防。", false)
+            ];
+        }
+        this.renderList();
+        this.bindAllEvent();
+        // 第8章 BOM定时器：30秒自动执行一次检测
+        setInterval(() => {
+            console.log("【定时任务】装备库状态检测（第8章定时器）");
+        }, 30000);
+    }
+
+    // 渲染全部武器到页面（第7章DOM、第9章jQuery选择器）
+    renderList() {
+        let allHtml = "";
+        this.weaponList.forEach((item, idx) => {
+            allHtml += item.getCardHTML(idx);
+        })
+        $("#container").html(allHtml);
+    }
+
+    // 保存数据到本地存储
+    saveLocal() {
+        localStorage.setItem("weaponList", JSON.stringify(this.weaponList));
+    }
+
+    // ========== 第7章 DOM进阶：事件委托、鼠标/键盘事件 ==========
+    bindAllEvent() {
+        let self = this;
+        // 事件委托：动态新增的按钮也能触发点击
+        $("#container").on("click", ".toggle-btn", function () {
+            let index = $(this).parent().data("index");
+            self.weaponList[index].toggleImportant();
+            self.saveLocal();
+            self.renderList();
+            // 第10章 jQuery动画：淡入高亮
+            $(`.weapon-item[data-index=${index}]`).fadeIn(300);
+        })
+
+        // 删除装备按钮
+        $("#container").on("click", ".del-btn", function () {
+            // 第8章 BOM确认弹窗
+            if (!confirm("确定要删除这件装备吗？")) return;
+            let index = $(this).parent().data("index");
+            // 第10章 淡出动画后再删除DOM
+            $(this).parent().fadeOut(300, function () {
+                self.weaponList.splice(index, 1);
+                self.saveLocal();
+                self.renderList();
+            })
+        })
+
+        // 复制装备按钮
+        $("#container").on("click", ".copy-btn", function () {
+            let index = $(this).parent().data("index");
+            let copyTarget = self.weaponList[index];
+            self.weaponList.push(new Weapon(copyTarget.name, copyTarget.info, copyTarget.isImportant));
+            self.saveLocal();
+            self.renderList();
+            alert("装备复制成功！");
+        })
+
+        // 底部【添加武器】按钮
+        $("#addNew").click(function () {
+            // 第8章 BOM输入弹窗，自定义新增装备
+            let newName = prompt("请输入武器名称：");
+            let newInfo = prompt("请输入武器参数信息：");
+            if (!newName || !newInfo) {
+                alert("名称和参数不能为空！");
+                return;
+            }
+            self.weaponList.push(new Weapon(newName, newInfo, false));
+            self.saveLocal();
+            self.renderList();
+            // 滑动动画
+            $(".weapon-item:last").slideDown();
+        })
+
+        // 第7章 键盘事件：按下Enter键快速添加装备
+        $(document).keydown(function (e) {
+            if (e.key === "Enter") {
+                $("#addNew").click();
+            }
+        })
+    }
+}
+
+// ========== 第9章 jQuery：页面加载完成执行 ==========
+$(function () {
+    new WeaponManager();
+})
+</script>
+</body>
+</html>
